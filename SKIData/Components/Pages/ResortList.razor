@@ -1,0 +1,46 @@
+﻿@page "/resorts" 
+@inject Service.SkiResortService SkiResortService
+
+<h1>Ski Resorts</h1>
+
+@if (resorts == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!resorts.Any())
+{
+    <p>No ski resorts found.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+                <th>Website</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var resort in resorts)
+            {
+                <tr>
+                    <td>@resort.Name</td>
+                    <td>@resort.Latitude</td>
+                    <td>@resort.Longitude</td>
+                    <td><a href="@resort.WebsiteUrl" target="_blank">Visit Website</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Model.SkiResort> resorts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        resorts = await SkiResortService.GetResortsAsync();
+    }
+}
