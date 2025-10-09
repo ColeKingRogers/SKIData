@@ -1,68 +1,140 @@
-﻿using Newtonsoft.Json;
+﻿using HtmlAgilityPack;
+using Microsoft.EntityFrameworkCore;
+using SKIData.Data;
 using SKIData.Model;
-using System.Runtime.CompilerServices;
-using HtmlAgilityPack;
-using NuGet.Protocol.Plugins;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 
-namespace SKIData.Service
+namespace SKIData.Services
 {
     public class SkiResortService
     {
-        private readonly string skiResortLisUrl = "";//snowpak
-        private readonly string userAgent = "My C# ski resort scrapper";
-        private readonly int delaySeconds = 2;
+        private readonly string _skiResortListUrl = "https://www.colorado.com/articles/colorado-ski-resorts-snows-perfect-state"; // Replace with your URL
+        private readonly string _userAgent = "My C# Ski Resort Scraper";
+        private readonly int _delaySeconds = 2;
+        private readonly SkiResortContext _context;
 
-        public async Task<List<SkiResort>> GetResortsAsync()
+        public SkiResortService(SkiResortContext context)
         {
-            List<SkiResort> resorts = new List<SkiResort>();
+            _context = context;
+        }
+
+        public async Task ScrapeAndSaveSkiResortsAsync()
+        {
+            List<SkiResort> scrapedResorts = await ScrapeSkiResortDataAsync();
+
+            if (scrapedResorts != null && scrapedResorts.Any())
+            {
+                Console.WriteLine($"Successfully scraped {scrapedResorts.Count} resorts."); // Debugging
+
+                try
+                {
+                    foreach (var resort in scrapedResorts)
+                    {
+                        if (!_context.SkiResorts.Any(r => r.Name == resort.Name))
+                        {
+                            _context.SkiResorts.Add(resort);
+                            Console.WriteLine($"Adding resort to database: {resort.Name}"); // Debugging
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Resort already exists in database: {resort.Name}"); // Debugging
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+                    Console.WriteLine("Ski resorts scraped and saved to the database.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error saving to database: {ex.Message}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No data scraped or an error occurred during scraping.");
+            }
+        }
+
+        private async Task<List<SkiResort>> ScrapeSkiResortDataAsync()
+        {
+            List<SkiResort> skiResorts = new List<SkiResort>();
 
             try
             {
                 HttpClient client = new HttpClient();
-                client.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
-                HttpResponseMessage response = await client.GetAsync(skiResortLisUrl);
+                client.DefaultRequestHeaders.UserAgent.ParseAdd(_userAgent);
+
+                HttpResponseMessage response = await client.GetAsync(_skiResortListUrl);
                 response.EnsureSuccessStatusCode();
 
                 string htmlContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"HTML content length: {htmlContent.Length}"); // Debugging
+
                 HtmlDocument htmlDocument = new HtmlDocument();
                 htmlDocument.LoadHtml(htmlContent);
 
-                //adjust XPath query based on actual site structure
-                HtmlNodeCollection resortNodes = htmlDocument.DocumentNode.SelectNodes("//div[contains(@class, 'resort-item')]");
+                //Adjust XPath queries to match structure of website
+                HtmlNodeCollection resortNodes = htmlDocument.DocumentNode.SelectNodes("//div[@class='field-item even']/p");
+
                 if (resortNodes != null)
                 {
+                    Console.WriteLine($"Found {resortNodes.Count} resort nodes."); // Debugging
+
                     foreach (HtmlNode resortNode in resortNodes)
                     {
                         try
                         {
                             string name = "N/A";
-                            string website = "N/A";
+                            string description = "N/A";
 
                             //Extract name
-                            HtmlNode nameNode = resortNode.SelectSingleNode(".//h2[@class='resort-name']");
+                            HtmlNode nameNode = resortNode.SelectSingleNode(".//strong");
                             name = nameNode?.InnerText.Trim() ?? "N/A";
 
-                            // Find the link to the resort's website
-                            HtmlNode websiteNode = resortNode.SelectSingleNode(".//a[@class='resort-website']"); // Example: Look for an <a> tag with a class
-                            website = websiteNode?.GetAttributeValue("href", "") ?? "N/A";  // Extract the href attribute (URL)
+                            // Get the description
+                            description = "";
+                            HtmlNodeCollection descriptionNodes = resortNode.SelectNodes("./text()");
 
-                            resorts.Add(new SkiResort { Name = name, WebsiteUrl = website });
+                            if (descriptionNodes != null && descriptionNodes.Count > 1)
+                            {
+                                description = descriptionNodes[1].InnerText.Trim();
+                            }
+                            else
+                            {
+                                description = "N/A";
+                            }
 
-                            await Task.Delay(TimeSpan.FromSeconds(delaySeconds)); // Respectful delay
+                            Console.WriteLine($"Extracted Name: {name}, Description: {description}"); // Debugging
+
+                            skiResorts.Add(new SkiResort { Name = name, Description = description });
+
+                            await Task.Delay(TimeSpan.FromSeconds(_delaySeconds)); // Respectful delay
                         }
                         catch (Exception ex)
                         {
-                            
+                            Console.WriteLine($"Error extracting data from resort node: {ex.Message}");
                         }
                     }
                 }
+                else
+                {
+                    Console.WriteLine("No resort items found on the page.");
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"HTTP Request Error: {ex.Message}");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"General Error: {ex.Message}");
             }
 
-            return resorts;
+            return skiResorts;
         }
     }
 }

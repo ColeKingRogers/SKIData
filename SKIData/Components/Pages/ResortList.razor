@@ -1,15 +1,17 @@
-﻿@page "/resorts" 
-@inject Service.SkiResortService SkiResortService
+﻿@page "/resorts"
+@using SKIData  // Assuming your SkiResort model is in the SKIData namespace
+@using Microsoft.EntityFrameworkCore
+@inject Data.SkiResortContext SkiResortContext
 
-<h1>Ski Resorts</h1>
+<h3>Resort List</h3>
 
 @if (resorts == null)
 {
-    <p><em>Loading...</em></p>
+    <p>Loading...</p>
 }
 else if (!resorts.Any())
 {
-    <p>No ski resorts found.</p>
+    <p><em>No ski resorts loaded.</em></p>
 }
 else
 {
@@ -17,9 +19,8 @@ else
         <thead>
             <tr>
                 <th>Name</th>
-                <th>Latitude</th>
-                <th>Longitude</th>
-                <th>Website</th>
+                <th>Description</th>
+                <!-- Add other columns here -->
             </tr>
         </thead>
         <tbody>
@@ -27,20 +28,21 @@ else
             {
                 <tr>
                     <td>@resort.Name</td>
-                    <td>@resort.Latitude</td>
-                    <td>@resort.Longitude</td>
-                    <td><a href="@resort.WebsiteUrl" target="_blank">Visit Website</a></td>
+                    <td><a href="@resort.Description" target="_blank">@resort.Description</a></td>
+                    <!-- Add other data display here -->
                 </tr>
             }
         </tbody>
     </table>
 }
 
+
 @code {
     private List<Model.SkiResort> resorts;
 
     protected override async Task OnInitializedAsync()
     {
-        resorts = await SkiResortService.GetResortsAsync();
+        //Fetch the data
+        resorts = await SkiResortContext.SkiResorts.ToListAsync();
     }
 }

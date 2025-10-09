@@ -5,9 +5,10 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using SKIData.Data;
 using SKIData.Model;
 
-namespace SKIData.Data
+namespace SKIData.Controllers
 {
     public class SkiResortsController : Controller
     {
@@ -53,7 +54,7 @@ namespace SKIData.Data
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,State,Country,Condition,Latitude,Longitude,WebsiteUrl")] SkiResort skiResort)
+        public async Task<IActionResult> Create([Bind("Id,Name,Description")] SkiResort skiResort)
         {
             if (ModelState.IsValid)
             {
@@ -85,7 +86,7 @@ namespace SKIData.Data
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,State,Country,Condition,Latitude,Longitude,WebsiteUrl")] SkiResort skiResort)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description")] SkiResort skiResort)
         {
             if (id != skiResort.Id)
             {
