@@ -19,8 +19,9 @@ namespace SKIData
             builder.Services.AddControllersWithViews();
             builder.Services.AddDbContextFactory<Data.SkiResortContext>(options =>
             {
-                options.UseSqlite(builder.Configuration.GetConnectionString("SkiResorts"));
+                options.UseSqlServer(builder.Configuration.GetConnectionString("SkiResorts"));
             });
+
             builder.Services.AddScoped<WeatherService>();
             builder.Services.AddQuickGridEntityFrameworkAdapter();
 
@@ -40,11 +41,6 @@ namespace SKIData
             }
 
             app.UseHttpsRedirection();
-            using (var scope = app.Services.CreateScope())//create database and seed data
-            {
-                var dbContext = scope.ServiceProvider.GetRequiredService<Data.SkiResortContext>();
-                dbContext.Database.EnsureCreated();
-            }
 
 
             app.UseAntiforgery();

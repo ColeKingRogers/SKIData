@@ -1,0 +1,32 @@
+﻿@page "/add-resort"
+@rendermode InteractiveServer
+@inject Data.SkiResortContext Db
+@using SKIData.Model 
+
+<h3>Add Ski Resort</h3>
+
+<input @bind="Model.Name" placeholder="Name" class="form-control mb-2" />
+<textarea @bind="Model.Description" placeholder="Description" class="form-control mb-2" />
+<input @bind="Model.Zipcode" placeholder="ZipCode" class="form-control mb-2" />
+
+<button class="btn btn-primary" @onclick="Save">Save</button>
+
+@if (Saved)
+{
+    <div class="alert alert-success mt-2">Saved id=@SavedId</div>
+}
+
+@code {
+    private SkiResort Model = new();
+    private bool Saved;
+    private int SavedId;
+
+    private async Task Save()
+    {
+        Db.SkiResorts.Add(Model);
+        await Db.SaveChangesAsync();
+        Saved = true;
+        SavedId = Model.Id;
+        Model = new SkiResort();
+    }
+}

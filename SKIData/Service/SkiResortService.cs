@@ -20,17 +20,5 @@ namespace SKIData.Services
         {
             _context = context;
         }
-
-        public async Task ScrapeAndSaveSkiResortsAsync()
-        {
-            List<SkiResort> scrapedResorts = await ScrapeSkiResortDataAsync();
-
-        }
-
-        private async Task<List<SkiResort>> ScrapeSkiResortDataAsync()
-        {
-            List<SkiResort> skiResorts = new List<SkiResort>();
-            return skiResorts;
-        }
     }
 }

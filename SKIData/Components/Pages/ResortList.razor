@@ -1,48 +1,66 @@
 ﻿@page "/resorts"
-@using SKIData  // Assuming your SkiResort model is in the SKIData namespace
+@rendermode InteractiveServer
+@inject Data.SkiResortContext Db
 @using Microsoft.EntityFrameworkCore
-@inject Data.SkiResortContext SkiResortContext
+@using SKIData.Model
 
-<h3>Resort List</h3>
+<h3>Ski Resorts</h3>
 
-@if (resorts == null)
+@if (items is null)
 {
-    <p>Loading...</p>
-}
-else if (!resorts.Any())
-{
-    <p><em>No ski resorts loaded.</em></p>
+    <p><em>Loading...</em></p>
 }
 else
 {
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Description</th>
-                <!-- Add other columns here -->
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var resort in resorts)
-            {
-                <tr>
-                    <td>@resort.Name</td>
-                    <td><a href="@resort.Description" target="_blank">@resort.Description</a></td>
-                    <!-- Add other data display here -->
-                </tr>
-            }
-        </tbody>
-    </table>
+    <div class="row">
+        @foreach (var item in items)
+        {
+            <div class="col-12 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">@item.Name <small class="text-muted">(@item.Zipcode)</small></h5>
+                        <p class="card-text">@item.Description</p>
+
+                        <div class="mt-2">
+                            <button class="btn btn-sm btn-danger" @onclick="() => ConfirmDelete(item.Id)">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
 }
 
-
 @code {
-    private List<Model.SkiResort> resorts;
+    private List<SkiResort>? items;
+    [Inject] private IJSRuntime Js { get; set; } = default!;
 
     protected override async Task OnInitializedAsync()
     {
-        //Fetch the data
-        resorts = await SkiResortContext.SkiResorts.ToListAsync();
+        await LoadItemsAsync();
+    }
+
+    private async Task LoadItemsAsync()
+    {
+        items = await Db.SkiResorts.AsNoTracking().OrderBy(r => r.Name).ToListAsync();
+    }
+
+    private async Task ConfirmDelete(int id)
+    {
+        var ok = await Js.InvokeAsync<bool>("confirm", "Delete this resort permanently?");
+        if (!ok) return;
+        await DeleteAsync(id);
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        var entity = await Db.SkiResorts.FindAsync(id);
+        if (entity == null) return;
+        Db.SkiResorts.Remove(entity);
+        await Db.SaveChangesAsync();
+        items?.RemoveAll(r => r.Id == id);
+        StateHasChanged();
     }
 }
