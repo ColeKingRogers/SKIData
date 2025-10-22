@@ -1,11 +1,16 @@
-﻿namespace SKIData.Model
+﻿using SKIData.Service;
+
+namespace SKIData.Model
 {
     public class WeatherModel
     {
-        public string City { get; set; }
-        public string Condition { get; set; }
-        public double TemperatureCelsius { get; set; }
-        public double WindSpeedKph { get; set; }
-        public double SnowDepthCm { get; set; }
+        public Location location { get; set; }
+        public CurrentWeather current { get; set; }
+        public string region { get; set; }
+        public string country { get; set; }
+        public string last_updated { get; set; }
+        public double temp_f { get; set; }
+        public double feelslike_f { get; set; }
+
     }
 }

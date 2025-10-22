@@ -21,12 +21,10 @@ namespace SKIData
             {
                 options.UseSqlite(builder.Configuration.GetConnectionString("SkiResorts"));
             });
-
+            builder.Services.AddScoped<WeatherService>();
             builder.Services.AddQuickGridEntityFrameworkAdapter();
 
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-            builder.Services.AddScoped<SkiResortService>();
-
 
 
 
@@ -46,8 +44,6 @@ namespace SKIData
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<Data.SkiResortContext>();
                 dbContext.Database.EnsureCreated();
-                Service.SkiResortService scraper = new Service.SkiResortService(dbContext);
-                scraper.ScrapeAndSaveSkiResortsAsync().Wait();
             }
 
 
