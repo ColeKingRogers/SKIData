@@ -7,3 +7,4 @@ Settled for manual inputting data for ski resorts
 Found a free API for weather
 What I learned about: API calls, Web scraping, HTML, Xpath, Azure SQL Databases, Blazor, various best practices
  
+https://youtu.be/O-XXf2aDCTY
